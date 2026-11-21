@@ -1,0 +1,6 @@
+.DS_Store
+*.log
+.superpowers/
+.claude/settings.local.json
+CLAUDE.local.md
+.claude/worktrees/

@@ -1,0 +1,12 @@
+{
+  "name": "thethumbsupguy",
+  "description": "TheThumbsupguy's personal Claude Code plugins.",
+  "owner": { "name": "TheThumbsupguy" },
+  "plugins": [
+    {
+      "name": "ttug-sdlc",
+      "source": "./plugins/ttug-sdlc",
+      "description": "Agentic SDLC tooling: take one change from scope to merged, with review and real-system checks. Skills: build-to-merge, drive-browser, device-walk, video-evidence."
+    }
+  ]
+}
