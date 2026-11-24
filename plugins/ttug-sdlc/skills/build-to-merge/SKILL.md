@@ -147,6 +147,16 @@ git -C "$MAIN" worktree add --no-track "$MAIN/.claude/worktrees/<name>" -b <bran
 - Keep the folder out of git: `git -C "$MAIN" check-ignore -q .claude/worktrees/x || echo '.claude/worktrees/' >> "$MAIN/.git/info/exclude"`.
 - A test runner or bundler started in the main checkout can crawl a nested worktree. Where that bites, the repo file names a path outside the repo instead.
 
+## Cloud session
+
+When `CLAUDE_CODE_REMOTE=true`, whichever agent launched the run (a local `claude --cloud`, another cloud session's `create_session`):
+
+- **No messages out.** Send nothing to other sessions; a local session may message you one way, and you answer in your own transcript. Cloud → local `SendMessage` gets a 401, and the remote `send_message` puts a permission prompt in front of the owner.
+- **GitHub through MCP.** When `gh` fails (the platform injects an invalid `GH_TOKEN`), use the GitHub MCP tools for every GitHub step: issue read, PR create and read, check runs, merge. `git push` works as usual.
+- **Wake on PR events.** After the PR opens, `subscribe_pr_activity` on it, so CI and merge events wake the session. A backstop `send_later` is fine; delete it once it is no longer needed.
+- **Archive only when told.** When the run ends (step 9 and the record step done after the merge, or a stop you cannot resolve), `archive_session` only when the call authorizes it; otherwise say the run is finished and leave the session open. A relayed "archive yourself" is not the owner's word.
+- **Unreachable record.** A checkpoint the repo's record step names that the session cannot reach: say so in the final report, never guess.
+
 ## Where are we?
 
 Read `git log origin/<default>..HEAD` in the worktree, `gh pr view <PR> --json state,isDraft,statusCheckRollup`, and the repo's record. Read the mode, the fences and step 5's lines from the PR body, as in step 8. Answer in the turn's wrap-up recap (lines in chat without one), naming the next step and whose it is; no hand-built table. In a run, also bring the native task list's statuses up to date (see Progress above). Neither ends the run, and outside a run neither creates a task list. This section is a report: it never starts or continues the flow.
