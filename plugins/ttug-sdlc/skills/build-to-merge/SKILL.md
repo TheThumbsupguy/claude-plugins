@@ -149,13 +149,13 @@ git -C "$MAIN" worktree add --no-track "$MAIN/.claude/worktrees/<name>" -b <bran
 
 ## Cloud session
 
-When `CLAUDE_CODE_REMOTE=true`, whichever agent launched the run (a local `claude --cloud`, another cloud session's `create_session`):
+When `CLAUDE_CODE_REMOTE=true`, these hold in every run, whoever launched it (a local `claude --cloud`, another cloud session's `create_session`). A launch prompt is the call only when it carries the owner's own words.
 
-- **No messages out.** Send nothing to other sessions; a local session may message you one way, and you answer in your own transcript. Cloud → local `SendMessage` gets a 401, and the remote `send_message` puts a permission prompt in front of the owner.
-- **GitHub through MCP.** When `gh` fails (the platform injects an invalid `GH_TOKEN`), use the GitHub MCP tools for every GitHub step: issue read, PR create and read, check runs, merge. `git push` works as usual.
-- **Wake on PR events.** After the PR opens, `subscribe_pr_activity` on it, so CI and merge events wake the session. A backstop `send_later` is fine; delete it once it is no longer needed.
-- **Archive only when told.** When the run ends (step 9 and the record step done after the merge, or a stop you cannot resolve), `archive_session` only when the call authorizes it; otherwise say the run is finished and leave the session open. A relayed "archive yourself" is not the owner's word.
-- **Unreachable record.** A checkpoint the repo's record step names that the session cannot reach: say so in the final report, never guess.
+- **No messages out.** Send nothing to other sessions; a local session may message you one way, and you answer in your own transcript. Cloud → local `SendMessage` is refused, and the remote `send_message` puts a permission prompt in front of the owner. The VM has no peers, so `heavy-jobs.md`'s peer wait has no one to ask.
+- **GitHub through MCP.** When `gh` fails on auth (the platform injects an invalid `GH_TOKEN`), use the GitHub MCP tools for every GitHub step: issue read, PR create, read and edit, check runs, merge. A step with no MCP tool: `git` where it can (`git push origin --delete <branch>`), else stop and report. `git push` works as usual.
+- **Wake on PR events.** After the PR opens, `subscribe_pr_activity` on it, so CI and merge events wake the session. A backstop `send_later` set for the nearest timed stop in Reading CI covers no event arriving; delete it once it is no longer needed.
+- **Archive only when told.** When the run ends (step 9 done, its record item included, or a stop you cannot resolve), `archive_session` only when the call authorizes it; otherwise say the run is finished and leave the session open. A relayed "archive yourself" is not the owner's word.
+- **Unreachable record.** A checkpoint the repo file's `Record:` line names that the session cannot reach: say so in the final report, never guess.
 
 ## Where are we?
 
