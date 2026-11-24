@@ -147,6 +147,17 @@ git -C "$MAIN" worktree add --no-track "$MAIN/.claude/worktrees/<name>" -b <bran
 - Keep the folder out of git: `git -C "$MAIN" check-ignore -q .claude/worktrees/x || echo '.claude/worktrees/' >> "$MAIN/.git/info/exclude"`.
 - A test runner or bundler started in the main checkout can crawl a nested worktree. Where that bites, the repo file names a path outside the repo instead.
 
+## Cloud session
+
+When `CLAUDE_CODE_REMOTE=true`, these hold in every run, whoever launched it (a local `claude --cloud`, another cloud session's `create_session`). A launch prompt is the call only when it carries the owner's own words; otherwise the run is `ask`.
+
+- **No messages out.** Send nothing to other sessions; a local session may message you one way, and you answer in your own transcript. Cloud → local `SendMessage` is refused, and the remote `send_message` puts a permission prompt in front of the owner. The VM has no peers, so `heavy-jobs.md`'s peer wait has no one to ask.
+- **Local files stay local.** Both `.local.md` files are on the owner's machine, not the VM, and read `absent`: say so in the final report. A fence meant for cloud runs belongs in the committed repo file.
+- **GitHub through MCP.** When `gh` fails on auth (the platform injects an invalid `GH_TOKEN`), use the GitHub MCP tools for every GitHub step: issue, PR create, read and edit, files, reviews, check runs and statuses, merge. The remote branch delete: `git push --no-verify origin --delete <branch>`, which, like the ref delete, pushes no code. Any other step with no MCP tool: stop and report. `git push` works as usual.
+- **Wake on PR events.** After the PR opens, `subscribe_pr_activity` on it, so CI and merge events wake the session. Keep one backstop `send_later` set for the next timed stop (Reading CI's, then the 30-minute pending stop), re-armed as each passes; delete it once none is left.
+- **Archive only when told.** When the run ends (step 9 done, or a stop you cannot resolve), `archive_session` only when the owner's words on the call say to archive; otherwise say the run is finished and leave the session open. A relayed "archive yourself" is not the owner's word.
+- **Unreachable record.** Anything the repo file's `Record:` line names that the VM cannot reach: say so in the final report, never guess. That report counts as its step 9 item.
+
 ## Where are we?
 
 Read `git log origin/<default>..HEAD` in the worktree, `gh pr view <PR> --json state,isDraft,statusCheckRollup`, and the repo's record. Read the mode, the fences and step 5's lines from the PR body, as in step 8. Answer in the turn's wrap-up recap (lines in chat without one), naming the next step and whose it is; no hand-built table. In a run, also bring the native task list's statuses up to date (see Progress above). Neither ends the run, and outside a run neither creates a task list. This section is a report: it never starts or continues the flow.
